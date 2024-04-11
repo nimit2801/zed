@@ -273,19 +273,67 @@ impl Element for Img {
     type AfterLayout = Option<Hitbox>;
 
     fn before_layout(&mut self, cx: &mut ElementContext) -> (LayoutId, Self::BeforeLayout) {
+        dbg!("before_layout");
         let layout_id = self.interactivity.before_layout(cx, |mut style, cx| {
+            dbg!("interactivity_before_layout");
             if let Some(data) = self.source.data(cx) {
+                dbg!("got some data");
                 let intrinsic_size: Size<DevicePixels> = data.size();
-                let object_fit = self.object_fit;
+                // let object_fit = self.object_fit;
 
                 return cx.request_measured_layout(
                     style,
-                    move |_known_dimensions: Size<Option<Pixels>>,
+                    move |known_dimensions: Size<Option<Pixels>>,
                           available_space: Size<AvailableSpace>,
                           _cx| {
-                        dbg!(_known_dimensions);
+                        dbg!(known_dimensions);
                         dbg!(available_space);
-                        object_fit.calculate_desired_size(intrinsic_size, available_space)
+                        // Sadly this is what we're seeing:
+                        // [crates/gpui/src/elements/img.rs:286:25] known_dimensions = Size { None × None }
+                        // [crates/gpui/src/elements/img.rs:287:25] available_space = Size { MaxContent × Definite(965.625 px) }
+                        // [crates/gpui/src/elements/img.rs:286:25] known_dimensions = Size { None × None }
+                        // [crates/gpui/src/elements/img.rs:287:25] available_space = Size { MinContent × Definite(965.625 px) }
+
+                        let aspect_ratio =
+                            intrinsic_size.width.0 as f32 / intrinsic_size.height.0 as f32;
+
+                        let available_width = match available_space.width {
+                            AvailableSpace::Definite(p) => Some(p),
+                            AvailableSpace::MaxContent | AvailableSpace::MinContent => {
+                                known_dimensions.width
+                            }
+                        };
+
+                        let available_height = match available_space.height {
+                            AvailableSpace::Definite(p) => Some(p),
+                            AvailableSpace::MaxContent | AvailableSpace::MinContent => {
+                                known_dimensions.height
+                            }
+                        };
+
+                        // If both available_width and available_height are None, we should use the intrinsic size
+                        let (available_width, available_height) =
+                            match (available_width, available_height) {
+                                (None, None) => (
+                                    px(intrinsic_size.width.0 as f32),
+                                    px(intrinsic_size.height.0 as f32),
+                                ),
+                                (Some(w), None) => (w, px(w.0 / aspect_ratio)),
+                                (None, Some(h)) => (h * aspect_ratio, h),
+                                (Some(w), Some(h)) => (w, h),
+                            };
+
+                        dbg!("Computed available size", available_width, available_height);
+
+                        let container_aspect_ratio = available_width.0 / available_height.0;
+
+                        if container_aspect_ratio > aspect_ratio {
+                            // Logic to fit image by height
+                            size(available_height * aspect_ratio, available_height)
+                        } else {
+                            // Logic to fit image by width
+                            size(available_width, available_width / aspect_ratio)
+                        }
                     },
                 );
             }
