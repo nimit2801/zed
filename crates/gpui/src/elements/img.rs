@@ -294,9 +294,6 @@ impl Element for Img {
                         // [crates/gpui/src/elements/img.rs:286:25] known_dimensions = Size { None × None }
                         // [crates/gpui/src/elements/img.rs:287:25] available_space = Size { MinContent × Definite(965.625 px) }
 
-                        let aspect_ratio =
-                            intrinsic_size.width.0 as f32 / intrinsic_size.height.0 as f32;
-
                         let available_width = match available_space.width {
                             AvailableSpace::Definite(p) => Some(p),
                             AvailableSpace::MaxContent | AvailableSpace::MinContent => {
@@ -311,13 +308,19 @@ impl Element for Img {
                             }
                         };
 
+                        let aspect_ratio =
+                            intrinsic_size.width.0 as f32 / intrinsic_size.height.0 as f32;
+
                         // If both available_width and available_height are None, we should use the intrinsic size
                         let (available_width, available_height) =
                             match (available_width, available_height) {
-                                (None, None) => (
-                                    px(intrinsic_size.width.0 as f32),
-                                    px(intrinsic_size.height.0 as f32),
-                                ),
+                                (None, None) => {
+                                    dbg!("None x None");
+                                    (
+                                        px(intrinsic_size.width.0 as f32),
+                                        px(intrinsic_size.height.0 as f32),
+                                    )
+                                }
                                 (Some(w), None) => (w, px(w.0 / aspect_ratio)),
                                 (None, Some(h)) => (h * aspect_ratio, h),
                                 (Some(w), Some(h)) => (w, h),

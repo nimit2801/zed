@@ -214,6 +214,7 @@ impl Render for ImageView {
                     .child(
                         img(self.path.clone())
                             .object_fit(ObjectFit::ScaleDown)
+                            .size_full()
                             .max_w_full()
                             .max_h_full(),
                     ),
