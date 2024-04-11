@@ -3,9 +3,10 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use crate::{
-    point, px, size, AbsoluteLength, Asset, Bounds, DefiniteLength, DevicePixels, Element,
-    ElementContext, Hitbox, ImageData, InteractiveElement, Interactivity, IntoElement, LayoutId,
-    Length, Pixels, SharedUri, Size, StyleRefinement, Styled, SvgSize, UriOrPath, WindowContext,
+    point, px, size, AbsoluteLength, Asset, AvailableSpace, Bounds, DefiniteLength, DevicePixels,
+    Element, ElementContext, Hitbox, ImageData, InteractiveElement, Interactivity, IntoElement,
+    LayoutId, Length, Pixels, SharedUri, Size, StyleRefinement, Styled, SvgSize, UriOrPath,
+    WindowContext,
 };
 use futures::{AsyncReadExt, Future};
 use image::{ImageBuffer, ImageError};
@@ -92,6 +93,7 @@ pub fn img(source: impl Into<ImageSource>) -> Img {
 }
 
 /// How to fit the image into the bounds of the element.
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ObjectFit {
     /// The image will be stretched to fill the bounds of the element.
     Fill,
@@ -235,23 +237,30 @@ impl Element for Img {
     fn before_layout(&mut self, cx: &mut ElementContext) -> (LayoutId, Self::BeforeLayout) {
         let layout_id = self.interactivity.before_layout(cx, |mut style, cx| {
             if let Some(data) = self.source.data(cx) {
-                let image_size = data.size();
+                let _intrinsic_size: Size<DevicePixels> = data.size();
+                let object_fit = self.object_fit;
 
-                // cx.request_measured_layout(style, |known_dimensions, available_space, _cx| { // here?
-
-                match (style.size.width, style.size.height) {
-                    (Length::Auto, Length::Auto) => {
-                        style.size = Size {
-                            width: Length::Definite(DefiniteLength::Absolute(
-                                AbsoluteLength::Pixels(px(image_size.width.0 as f32)),
-                            )),
-                            height: Length::Definite(DefiniteLength::Absolute(
-                                AbsoluteLength::Pixels(px(image_size.height.0 as f32)),
-                            )),
+                return cx.request_measured_layout(
+                    style,
+                    move |_known_dimensions: Size<Option<Pixels>>,
+                          _available_space: Size<AvailableSpace>,
+                          _cx| {
+                        match object_fit {
+                            ObjectFit::Contain => {
+                                todo!();
+                            }
+                            ObjectFit::Fill => {
+                                todo!();
+                            }
+                            ObjectFit::ScaleDown => {
+                                todo!();
+                            }
+                            _ => {
+                                todo!();
+                            }
                         }
-                    }
-                    _ => {}
-                }
+                    },
+                );
             }
 
             cx.request_layout(&style, [])
