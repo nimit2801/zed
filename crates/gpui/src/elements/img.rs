@@ -108,6 +108,44 @@ pub enum ObjectFit {
 }
 
 impl ObjectFit {
+    pub(crate) fn calculate_desired_size(
+        &self,
+        intrinsic_size: Size<DevicePixels>, // Original image size
+        available_space: Size<AvailableSpace>, // Space available in parent
+    ) -> Size<Pixels> {
+        // Implementation varies based on `self`
+        // For example, for `Contain`:
+        match self {
+            ObjectFit::Contain | ObjectFit::ScaleDown | ObjectFit::Fill => {
+                // Mock implementation, replace with actual logic
+                let aspect_ratio = intrinsic_size.width.0 as f32 / intrinsic_size.height.0 as f32;
+
+                let available_width = match available_space.width {
+                    AvailableSpace::Definite(p) => p,
+                    AvailableSpace::MaxContent => todo!(),
+                    AvailableSpace::MinContent => todo!(),
+                };
+
+                let available_height = match available_space.height {
+                    AvailableSpace::Definite(p) => p,
+                    AvailableSpace::MaxContent => todo!(),
+                    AvailableSpace::MinContent => todo!(),
+                };
+
+                let container_aspect_ratio = available_width.0 / available_height.0;
+
+                if container_aspect_ratio > aspect_ratio {
+                    // Logic to fit image by height
+                    size(available_height * aspect_ratio, available_height)
+                } else {
+                    // Logic to fit image by width
+                    size(available_width, available_width / aspect_ratio)
+                }
+            }
+            _ => todo!(),
+        }
+    }
+
     /// Get the bounds of the image within the given bounds.
     pub fn get_bounds(
         &self,
@@ -237,28 +275,17 @@ impl Element for Img {
     fn before_layout(&mut self, cx: &mut ElementContext) -> (LayoutId, Self::BeforeLayout) {
         let layout_id = self.interactivity.before_layout(cx, |mut style, cx| {
             if let Some(data) = self.source.data(cx) {
-                let _intrinsic_size: Size<DevicePixels> = data.size();
+                let intrinsic_size: Size<DevicePixels> = data.size();
                 let object_fit = self.object_fit;
 
                 return cx.request_measured_layout(
                     style,
                     move |_known_dimensions: Size<Option<Pixels>>,
-                          _available_space: Size<AvailableSpace>,
+                          available_space: Size<AvailableSpace>,
                           _cx| {
-                        match object_fit {
-                            ObjectFit::Contain => {
-                                todo!();
-                            }
-                            ObjectFit::Fill => {
-                                todo!();
-                            }
-                            ObjectFit::ScaleDown => {
-                                todo!();
-                            }
-                            _ => {
-                                todo!();
-                            }
-                        }
+                        dbg!(_known_dimensions);
+                        dbg!(available_space);
+                        object_fit.calculate_desired_size(intrinsic_size, available_space)
                     },
                 );
             }
