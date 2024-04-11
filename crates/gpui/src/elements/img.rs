@@ -236,6 +236,9 @@ impl Element for Img {
         let layout_id = self.interactivity.before_layout(cx, |mut style, cx| {
             if let Some(data) = self.source.data(cx) {
                 let image_size = data.size();
+
+                // cx.request_measured_layout(style, |known_dimensions, available_space, _cx| { // here?
+
                 match (style.size.width, style.size.height) {
                     (Length::Auto, Length::Auto) => {
                         style.size = Size {
@@ -262,6 +265,7 @@ impl Element for Img {
         _before_layout: &mut Self::BeforeLayout,
         cx: &mut ElementContext,
     ) -> Option<Hitbox> {
+        // request_measured_layout
         self.interactivity
             .after_layout(bounds, bounds.size, cx, |_, _, hitbox, _| hitbox)
     }
