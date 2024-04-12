@@ -17,14 +17,6 @@ use smol::{
     io::AsyncWriteExt,
     process::{Child, ChildStdin, ChildStdout, Command},
 };
-use std::{
-    cmp::Reverse,
-    future::Future,
-    iter,
-    path::{Path, PathBuf},
-    process::Stdio,
-};
-use std::{future::Future, ops::Range, path::PathBuf, process::Stdio};
 use std::{ops::Range, path::PathBuf, process::Stdio};
 pub use supermaven_completion_provider::*;
 use ui::prelude::*;
@@ -33,23 +25,27 @@ use util::ResultExt;
 pub fn init(cx: &mut AppContext) {
     cx.set_global(Supermaven::Disabled);
 
-    let mut provider = all_language_settings(None, cx).inline_completions.provider;
-    if provider == language::language_settings::InlineCompletionProvider::Supermaven {
-        Supermaven::update(cx, |supermaven, cx| supermaven.start(cx));
-    }
+    todo!("initialize");
 
-    cx.observe_global::<SettingsStore>(move |cx| {
-        let new_provider = all_language_settings(None, cx).inline_completions.provider;
-        if new_provider != provider {
-            provider = new_provider;
-            if provider == language::language_settings::InlineCompletionProvider::Supermaven {
-                Supermaven::update(cx, |supermaven, cx| supermaven.start(cx));
-            } else {
-                Supermaven::update(cx, |supermaven, _cx| supermaven.stop());
-            }
-        }
-    })
-    .detach();
+    // Old API before we migrated to a new InlineCompletionProvider setup
+    //
+    // let mut provider = all_language_settings(None, cx).inline_completions.provider;
+    // if provider == language::language_settings::InlineCompletionProvider::Supermaven {
+    //     Supermaven::update(cx, |supermaven, cx| supermaven.start(cx));
+    // }
+
+    // cx.observe_global::<SettingsStore>(move |cx| {
+    //     let new_provider = all_language_settings(None, cx).inline_completions.provider;
+    //     if new_provider != provider {
+    //         provider = new_provider;
+    //         if provider == language::language_settings::InlineCompletionProvider::Supermaven {
+    //             Supermaven::update(cx, |supermaven, cx| supermaven.start(cx));
+    //         } else {
+    //             Supermaven::update(cx, |supermaven, _cx| supermaven.stop());
+    //         }
+    //     }
+    // })
+    // .detach();
 }
 
 pub enum Supermaven {

@@ -34,7 +34,9 @@ impl InlineCompletionProvider for SupermavenCompletionProvider {
         let file = buffer.file();
         let language = buffer.language_at(cursor_position);
         let settings = all_language_settings(file, cx);
-        settings.inline_completions_enabled(language.as_ref(), file.map(|f| f.path().as_ref()))
+
+        // todo!("change this property to be more general")
+        settings.copilot_enabled(language.as_ref(), file.map(|f| f.path().as_ref()))
     }
 
     fn refresh(
@@ -85,12 +87,12 @@ impl InlineCompletionProvider for SupermavenCompletionProvider {
         self.completion_id = None;
     }
 
-    fn active_completion_text<'a>(
-        &'a self,
+    fn active_completion_text(
+        &self,
         buffer: &Model<Buffer>,
         cursor_position: Anchor,
-        cx: &'a AppContext,
-    ) -> Option<&'a str> {
+        cx: &AppContext,
+    ) -> Option<&str> {
         let completion_id = self.completion_id?;
         let buffer = buffer.read(cx);
         let cursor_offset = cursor_position.to_offset(buffer);
