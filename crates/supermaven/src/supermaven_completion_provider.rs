@@ -87,12 +87,12 @@ impl InlineCompletionProvider for SupermavenCompletionProvider {
         self.completion_id = None;
     }
 
-    fn active_completion_text(
-        &self,
-        buffer: &Model<Buffer>,
+    fn active_completion_text<'a>(
+        &'a self,
+        buffer: &'a Model<Buffer>,
         cursor_position: Anchor,
-        cx: &AppContext,
-    ) -> Option<&str> {
+        cx: &'a AppContext,
+    ) -> Option<&'a str> {
         let completion_id = self.completion_id?;
         let buffer = buffer.read(cx);
         let cursor_offset = cursor_position.to_offset(buffer);
